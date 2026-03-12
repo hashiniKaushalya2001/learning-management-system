@@ -11,5 +11,7 @@ Route::get('/user', function (Request $request) {
 
 Route::get('/department', [DepartmentController::class, 'index']);
 Route::post('/department', [DepartmentController::class, 'store']);
+Route::put('/department/{id}', [DepartmentController::class, 'update']);
+Route::delete('/department/{id}', [DepartmentController::class, 'destroy']);
 
 Route::get('/course', [CourseController::class, 'index']);
