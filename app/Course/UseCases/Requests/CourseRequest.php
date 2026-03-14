@@ -14,11 +14,10 @@ class CourseRequest extends Data
     public static function rules(): array
     {
         return [
-            'course' => [
-                'required',
-                Rule::unique('courses', 'course')
-                    ->ignore(request()->input('id')),
-            ],
+            'department' => ['required', 'string'],
+            'courses' => ['required', 'array', 'min:1'],
+            'courses.*.course_id' => ['required', 'string'],
+            'courses.*.course' => ['required', 'string'],
         ];
     }
 }
