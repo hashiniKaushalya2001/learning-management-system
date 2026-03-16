@@ -16,12 +16,9 @@ export function updateTheme(value: Appearance): void {
     }
 
     if (value === 'system') {
-        const mediaQueryList = window.matchMedia(
-            '(prefers-color-scheme: dark)',
-        );
-        const systemTheme = mediaQueryList.matches ? 'dark' : 'light';
+        const mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
 
-        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.toggle('dark', mediaQueryList.matches);
     } else {
         document.documentElement.classList.toggle('dark', value === 'dark');
     }
