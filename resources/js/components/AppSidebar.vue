@@ -28,6 +28,11 @@ const mainNavItems: NavItem[] = [
         href: '/departments',
         icon: Building
     },
+    {
+        title: 'Course',
+        href: '/course',
+        icon: Building
+    },
 ];
 
 const footerNavItems: NavItem[] = [

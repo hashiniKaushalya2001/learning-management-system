@@ -17,3 +17,7 @@ require __DIR__.'/settings.php';
 Route::get('/departments', function () {
     return Inertia::render('Department/index');
 });
+
+Route::get('/course', function () {
+    return Inertia::render('Course/index');
+});

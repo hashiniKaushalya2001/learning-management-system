@@ -14,7 +14,7 @@ class Course extends Model
     protected $table = 'courses';
 
     protected $fillable = [
-        'course',
+        'course_id', 'course', 'department',
     ];
 
     protected static function newFactory()

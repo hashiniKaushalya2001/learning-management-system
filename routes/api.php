@@ -15,3 +15,8 @@ Route::put('/department/{id}', [DepartmentController::class, 'update']);
 Route::delete('/department/{id}', [DepartmentController::class, 'destroy']);
 
 Route::get('/course', [CourseController::class, 'index']);
+Route::post('/course', [CourseController::class, 'store']);
+Route::put('/course/{id}', [CourseController::class, 'update']);
+Route::delete('/course/{id}', [CourseController::class, 'destroy']);
+Route::get('/departments', [CourseController::class, 'loadDropdown']);
+Route::get('/course/department/{department}', [CourseController::class, 'getByDepartment']);
