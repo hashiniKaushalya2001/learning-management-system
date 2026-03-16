@@ -1,5 +1,6 @@
 <?php
 
+use App\Course\IO\Http\Controllers\CourseController;
 use App\Department\IO\Http\Controllers\DepartmentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -10,3 +11,5 @@ Route::get('/user', function (Request $request) {
 
 Route::get('/department', [DepartmentController::class, 'index']);
 Route::post('/department', [DepartmentController::class, 'store']);
+
+Route::get('/course', [CourseController::class, 'index']);
