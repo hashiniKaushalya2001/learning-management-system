@@ -11,6 +11,9 @@ import type { DefineComponent } from 'vue';
 import '../css/app.css';
 import { initializeTheme } from '@/composables/useAppearance';
 
+// 1. Import the Aura preset (or Lara if you prefer)
+// eslint-disable-next-line import/order
+import Aura from '@primevue/themes/aura';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -25,7 +28,18 @@ createInertiaApp({
         const app = createApp({ render: () => h(App, props) });
 
         app.use(plugin);
-        app.use(PrimeVue, { ripple: true });
+
+        // 2. Add the theme configuration here
+        app.use(PrimeVue, {
+            ripple: true,
+            theme: {
+                preset: Aura,
+                options: {
+                    darkModeSelector: '.dark', // Ensures it works with Tailwind dark mode
+                }
+            }
+        });
+
         app.use(ToastService);
         app.use(ConfirmationService);
 

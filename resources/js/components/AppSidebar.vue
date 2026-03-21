@@ -33,6 +33,11 @@ const mainNavItems: NavItem[] = [
         href: '/course',
         icon: Building
     },
+    {
+        title: 'Meterial',
+        href: '/meterial',
+        icon: Building
+    },
 ];
 
 const footerNavItems: NavItem[] = [

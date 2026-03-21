@@ -18,7 +18,6 @@ const departments = ref<string[]>([])
 const isAddingDepartment = ref(false)
 
 const courses = ref<Course[]>([
-    { id: null, course_id: '', course: '' }
 ])
 
 const editingIndex = ref<number | null>(null)
@@ -185,8 +184,6 @@ const saveCourses = async () => {
                 Course Management
             </h1>
 
-            <div class="bg-white shadow rounded-lg p-5 mb-6">
-
                 <h2 class="text-lg font-semibold mb-3">
                     Department
                 </h2>
@@ -226,7 +223,7 @@ const saveCourses = async () => {
                 </div>
             </div>
 
-            <div class="bg-white shadow rounded-lg p-5">
+            <div class="p-5">
 
                 <h2 class="text-lg font-semibold mb-4">
                     Courses
@@ -314,7 +311,6 @@ const saveCourses = async () => {
 
             </div>
 
-        </div>
 
     </AppLayout>
 </template>
