@@ -14,6 +14,7 @@ import { initializeTheme } from '@/composables/useAppearance';
 // 1. Import the Aura preset (or Lara if you prefer)
 // eslint-disable-next-line import/order
 import Aura from '@primevue/themes/aura';
+import 'primeicons/primeicons.css';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
