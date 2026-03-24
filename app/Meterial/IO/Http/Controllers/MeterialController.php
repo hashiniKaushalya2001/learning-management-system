@@ -59,13 +59,13 @@ class MeterialController extends Controller
 
         return response()->json([
             'message' => 'Material deleted successfully',
-        ]);
+        ], 200);
     }
 
     public function getDepartments(): JsonResponse
     {
         return response()->json([
-            'data' => Department::select('id', 'department as name')->get()
+            'data' => Department::select('id', 'department as name')->get(),
         ]);
     }
 }

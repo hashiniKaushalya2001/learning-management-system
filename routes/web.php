@@ -25,3 +25,7 @@ Route::get('/course', function () {
 Route::get('/meterial', function () {
     return Inertia::render('Meterial/index');
 });
+
+Route::get('/students', function () {
+    return Inertia::render('Students/index');
+});

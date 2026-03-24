@@ -23,11 +23,15 @@ class CourseController
 
     public function store(CourseRequest $request, StoreCourseInteractor $storeCourseInteractor): JsonResponse
     {
+        request()->validate(CourseRequest::rules());
+
         return $storeCourseInteractor->execute($request);
     }
 
     public function update(CourseRequest $request, UpdateCourseInteractor $updateCourseInteractor, int $id): JsonResponse
     {
+        request()->validate(CourseRequest::rules($id));
+
         return $updateCourseInteractor->execute($request, $id);
     }
 

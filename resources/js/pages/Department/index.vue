@@ -38,6 +38,10 @@ export default defineComponent({
             confirmMessage: '',
             confirmTitle: '',
             confirmAction: null as (() => void) | null,
+            search: '',
+            first: 0,
+            rows: 10,
+            totalRecords: 0,
         };
     },
 
@@ -50,6 +54,8 @@ export default defineComponent({
             try {
                 const response = await axios.get('/api/department');
                 this.departments = response.data.data;
+
+                this.totalRecords = this.departments.length;
             } catch (error) {
                 console.error('Failed to load departments:', error);
                 this.$toast.add({
@@ -103,13 +109,25 @@ export default defineComponent({
                 this.departmentName = '';
                 this.editingId = null;
                 this.loadDepartments();
-            } catch {
+            } catch (error: any) {
+                if (error.response && error.response.status === 422) {
+                    const validationErrors = error.response.data.errors;
+                    const errorMessage = validationErrors.department ? validationErrors.department[0] : 'Validation failed';
+
                 this.$toast.add({
                     severity: 'error',
-                    summary: 'Error',
-                    detail: 'Save failed',
-                    life: 3000
+                    summary: 'Validation Error',
+                    detail: errorMessage,
+                    life: 4000
                 });
+                } else {
+                    this.$toast.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'Save failed. Please try again.',
+                        life: 3000
+                    });
+                }
             }
         },
 
@@ -187,33 +205,46 @@ export default defineComponent({
                 <div class="flex gap-2">
                     <PvButton
                         :label="editingId ? 'Update' : 'Save'"
-                        :icon="editingId ? 'pi pi-check' : 'pi pi-check'"
-                        class="bg-emerald-500 border-none px-6"
+                        icon="pi pi-check"
+                        class="bg-emerald-500 border-none px-6 text-white"
                         @click="saveDepartment"
                     />
                     <PvButton
                         v-if="editingId"
                         label="Cancel"
+                        severity="secondary"
                         variant="text"
-                        class="bg-emerald-500 border-none px-6"
                         @click="editingId = null; departmentName = ''"
                     />
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div class="mb-4 flex justify-end">
+                    <span class="relative">
+                        <InputText
+                            v-model="search"
+                            placeholder="Search departments..."
+                            class="w-64 pl-10"
+                        />
+                    </span>
+                </div>
+
                 <DataTable
-                    :value="departments"
-                    class="p-datatable-sm"
+                    :value="departments.filter(d => d.department.toLowerCase().includes(search.toLowerCase()))"
+                    :paginator="true"
+                    :rows="rows"
+                    :first="first"
+                    :totalRecords="totalRecords"
+                    @page="e => { first = e.first; rows = e.rows; }"
                     responsiveLayout="scroll"
-                    :showGridlines="false"
                 >
                     <Column
                         field="id"
                         header="ID"
                         class="w-16"
-                        headerClass="!text-center justify-center"
-                        bodyClass="!text-center"
+                        headerClass="justify-center"
+                        bodyClass="text-center"
                     ></Column>
 
                     <Column
@@ -225,8 +256,8 @@ export default defineComponent({
                     <Column
                         header="Actions"
                         class="w-32"
-                        headerClass="!text-center justify-center"
-                        bodyClass="!text-center"
+                        headerClass="justify-center"
+                        bodyClass="text-center"
                     >
                         <template #body="{ data }">
                             <div class="flex justify-center gap-1">
