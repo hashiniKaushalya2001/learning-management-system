@@ -1,5 +1,6 @@
 <?php
 
+use App\Assignment\IO\Http\Controllers\AssignmentController;
 use App\Course\IO\Http\Controllers\CourseController;
 use App\Department\IO\Http\Controllers\DepartmentController;
 use App\Meterial\IO\Http\Controllers\MeterialController;
@@ -36,3 +37,8 @@ Route::put('/students/{id}', [StudentsController::class, 'update']);
 Route::delete('/students/{id}', [StudentsController::class, 'destroy']);
 
 Route::get('/students/{id}', [StudentsController::class, 'showData']);
+
+Route::get('/assignment', [AssignmentController::class, 'index']);
+Route::post('/assignment', [AssignmentController::class, 'store']);
+Route::put('/assignment/{assignment}', [AssignmentController::class, 'update']);
+Route::delete('/assignment/{assignment}', [AssignmentController::class, 'destroy']);
