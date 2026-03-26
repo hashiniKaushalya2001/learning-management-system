@@ -37,6 +37,11 @@ const mainNavItems: NavItem[] = [
         href: '/meterial',
         icon: Building
     },
+    {
+        title: 'Students',
+        href: '/students',
+        icon: Building
+    },
 ];
 
 </script>

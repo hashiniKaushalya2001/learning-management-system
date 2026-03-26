@@ -3,6 +3,7 @@
 use App\Course\IO\Http\Controllers\CourseController;
 use App\Department\IO\Http\Controllers\DepartmentController;
 use App\Meterial\IO\Http\Controllers\MeterialController;
+use App\Students\IO\Http\Controllers\StudentsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -28,3 +29,10 @@ Route::put('/meterial/{id}', [MeterialController::class, 'update']);
 Route::delete('/meterial/{id}', [MeterialController::class, 'destroy']);
 
 Route::get('/courses/{courseId}/department', [MeterialController::class, 'getDepartmentByCourse']);
+
+Route::get('/students', [StudentsController::class, 'index']);
+Route::post('/students', [StudentsController::class, 'store']);
+Route::put('/students/{id}', [StudentsController::class, 'update']);
+Route::delete('/students/{id}', [StudentsController::class, 'destroy']);
+
+Route::get('/students/{id}', [StudentsController::class, 'showData']);

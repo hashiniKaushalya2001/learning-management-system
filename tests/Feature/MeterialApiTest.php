@@ -43,7 +43,7 @@ it('can create a meterials', function () {
 
     $course = Course::factory()->create([
         'department' => $department->id,
-        'course' => 'Laravel', // Matches Interactor
+        'course' => 'Laravel',
     ]);
 
     $file = UploadedFile::fake()->create('notes.pdf', 100);
@@ -67,73 +67,66 @@ it('can create a meterials', function () {
     Storage::disk('local')->assertExists($expectedPath);
 });
 
-// it('can update a meterial', function () {
-//
-//    Storage::fake('public');
-//
-//    $department = Department::factory()->create();
-//    $course = Course::factory()->create();
-//
-//    $oldFile = UploadedFile::fake()->create('old.pdf', 100);
-//
-//    $meterial = Meterial::factory()->create([
-//        'department' => $department->id,
-//        'course_id' => $course->id,
-//        'meterial' => 'meterials/old.pdf',
-//    ]);
-//
-//    $newDepartment = Department::factory()->create();
-//    $newCourse = Course::factory()->create();
-//
-//    $newFile = UploadedFile::fake()->create('updated.pdf', 100);
-//
-//    $payload = [
-//        'department' => $newDepartment->id,
-//        'course_id' => $newCourse->id,
-//        'meterial' => $newFile,
-//    ];
-//
-//    $response = $this->postJson("/api/meterial/{$meterial->id}?_method=PUT", $payload);
-//
-//    $response->assertStatus(200)
-//        ->assertJson([
-//            'data' => [
-//                'id' => $meterial->id,
-//            ],
-//            'message' => 'Meterial updated successfully',
-//        ]);
-//
-//    $this->assertDatabaseHas('meterials', [
-//        'id' => $meterial->id,
-//        'department' => $newDepartment->id,
-//        'course_id' => $newCourse->id,
-//    ]);
-// });
-//
-// it('can delete a meterial', function () {
-//
-//    $meterial = Meterial::factory()->create();
-//
-//    $response = $this->deleteJson("/api/meterial/{$meterial->id}");
-//
-//    $response->assertStatus(200)
-//        ->assertJson([
-//            'message' => 'Meterial deleted successfully',
-//        ]);
-//
-//    $this->assertSoftDeleted('meterials', [
-//        'id' => $meterial->id,
-//    ]);
-// });
+it('can update a meterial and its files', function () {
+    Storage::fake('public');
 
-// it('can fetch department data for a meterial', function () {
-//    $department = Department::factory()->create();
-//    $course = Course::factory()->create(['department' => $department->id]);
-//
-//    $response = $this->getJson("/api/courses/{$course->id}/department");
-//
-//    $response->assertStatus(200)
-//        ->assertJson([
-//            'department_id' => $department->id,
-//        ]);
-// });
+    $department = Department::factory()->create(['department' => 'IT']);
+    $course = Course::factory()->create([
+        'department' => $department->id,
+        'course' => 'Laravel',
+    ]);
+
+    $material = Meterial::factory()->create([
+        'department' => $department->id,
+        'course_id' => $course->id,
+    ]);
+
+    $newFile = UploadedFile::fake()->create('updated_notes.pdf', 200);
+
+    $updatePayload = [
+        'department' => $department->id,
+        'course_id' => $course->id,
+        'meterial' => $newFile,
+        'duration' => '6 Months',
+        'semester' => 'Semester 2',
+        'aim' => 'Updated Aim',
+        'lecturer' => 'New Lecturer',
+    ];
+
+    $response = $this->putJson("/api/meterial/{$material->id}", $updatePayload);
+
+    $response->assertStatus(200);
+
+    $this->assertDatabaseHas('meterials', [
+        'id' => $material->id,
+        'semester' => 'Semester 2',
+        'lecturer' => 'New Lecturer',
+        'duration' => '6 Months',
+    ]);
+
+    Storage::disk('public')->assertExists('meterials/'.$newFile->hashName());
+});
+
+it('can delete a data and file in meterial', function () {
+    Storage::fake('public');
+
+    $file = UploadedFile::fake()->create('lecture_notes.pdf', 500);
+    $path = $file->store('meterials', 'public');
+
+    $material = Meterial::factory()->create([
+        'meterial' => $path,
+    ]);
+
+    $this->assertDatabaseHas('meterials', ['id' => $material->id]);
+    Storage::disk('public')->assertExists($path);
+
+    $response = $this->deleteJson("/api/meterial/{$material->id}");
+
+    $response->assertStatus(200);
+
+    $this->assertSoftDeleted('meterials', [
+        'id' => $material->id,
+    ]);
+
+    Storage::disk('public')->assertMissing($path);
+});

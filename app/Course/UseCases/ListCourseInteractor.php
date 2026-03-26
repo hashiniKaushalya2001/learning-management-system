@@ -7,7 +7,7 @@ use Illuminate\Http\JsonResponse;
 
 class ListCourseInteractor
 {
-    public function execute(?string $search, ?int $perPage = 5): JsonResponse
+    public function execute(?string $search): JsonResponse
     {
         $query = Course::query();
 
@@ -15,15 +15,10 @@ class ListCourseInteractor
             $query->where('course', 'like', "%{$search}%");
         }
 
-        $courses = $query->paginate($perPage ?? 5);
+        $courses = $query->get();
 
         return response()->json([
-            'data' => $courses->items(),
-            'meta' => [
-                'current_page' => $courses->currentPage(),
-                'per_page' => $courses->perPage(),
-                'total' => $courses->total(),
-            ]
+            'data' => $courses,
         ]);
     }
 }

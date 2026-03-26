@@ -2,7 +2,6 @@
 
 namespace App\Meterial\IO\Http\Controllers;
 
-use App\Department\Entities\Models\Department;
 use App\Http\Controllers\Controller;
 use App\Meterial\UseCases\DeleteMeterialInteractor;
 use App\Meterial\UseCases\ListMeterialInteractor;
@@ -59,13 +58,6 @@ class MeterialController extends Controller
 
         return response()->json([
             'message' => 'Material deleted successfully',
-        ]);
-    }
-
-    public function getDepartments(): JsonResponse
-    {
-        return response()->json([
-            'data' => Department::select('id', 'department as name')->get()
-        ]);
+        ], 200);
     }
 }

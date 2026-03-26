@@ -11,7 +11,11 @@ class UpdateMeterialInteractor
     {
         $meterial = Meterial::findOrFail($id);
 
+        // Check if a new file was actually uploaded
         if (isset($data['meterial']) && $data['meterial'] instanceof UploadedFile) {
+            // Option: Delete the old file here if you want to save space
+            // Storage::disk('public')->delete($meterial->meterial);
+
             $path = $data['meterial']->store('meterials', 'public');
             $data['meterial'] = $path;
         }

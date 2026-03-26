@@ -38,6 +38,10 @@ export default defineComponent({
             confirmMessage: '',
             confirmTitle: '',
             confirmAction: null as (() => void) | null,
+            search: '',
+            first: 0,
+            rows: 10,
+            totalRecords: 0,
         };
     },
 
@@ -50,6 +54,8 @@ export default defineComponent({
             try {
                 const response = await axios.get('/api/department');
                 this.departments = response.data.data;
+
+                this.totalRecords = this.departments.length;
             } catch (error) {
                 console.error('Failed to load departments:', error);
                 this.$toast.add({
@@ -103,13 +109,25 @@ export default defineComponent({
                 this.departmentName = '';
                 this.editingId = null;
                 this.loadDepartments();
-            } catch {
-                this.$toast.add({
-                    severity: 'error',
-                    summary: 'Error',
-                    detail: 'Save failed',
-                    life: 3000
-                });
+            } catch (error: any) {
+                if (error.response && error.response.status === 422) {
+                    const validationErrors = error.response.data.errors;
+                    const errorMessage = validationErrors.department ? validationErrors.department[0] : 'Validation failed';
+
+                    this.$toast.add({
+                        severity: 'error',
+                        summary: 'Validation Error',
+                        detail: errorMessage,
+                        life: 4000
+                    });
+                } else {
+                    this.$toast.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'Save failed. Please try again.',
+                        life: 3000
+                    });
+                }
             }
         },
 
@@ -187,54 +205,64 @@ export default defineComponent({
                 <div class="flex gap-2">
                     <PvButton
                         :label="editingId ? 'Update' : 'Save'"
-                        :icon="editingId ? 'pi pi-check' : 'pi pi-check'"
-                        class="bg-emerald-500 border-none px-6"
+                        icon="pi pi-check"
+                        class="bg-emerald-500 border-none px-6 text-white"
                         @click="saveDepartment"
                     />
                     <PvButton
                         v-if="editingId"
                         label="Cancel"
+                        severity="secondary"
                         variant="text"
-                        class="bg-emerald-500 border-none px-6"
                         @click="editingId = null; departmentName = ''"
                     />
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                <DataTable
-                    :value="departments"
-                    class="p-datatable-sm"
-                    responsiveLayout="scroll"
-                    :showGridlines="false"
-                >
-                    <Column
-                        field="id"
-                        header="ID"
-                        class="w-16"
-                        headerClass="!text-center justify-center"
-                        bodyClass="!text-center"
-                    ></Column>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 max-w-4xl">
+                <div class="mb-4 flex justify-end">
+                    <span class="relative">
+                        <InputText
+                            v-model="search"
+                            placeholder="Search departments..."
+                            class="w-64 pl-10"
+                        />
+                    </span>
+                </div>
 
+                <DataTable
+                    :value="departments.filter(d => d.department.toLowerCase().includes(search.toLowerCase()))"
+                    :paginator="true"
+                    :rows="rows"
+                    :first="first"
+                    :totalRecords="totalRecords"
+                    @page="e => { first = e.first; rows = e.rows; }"
+                    responsiveLayout="scroll"
+                    class="p-datatable-sm"
+                    :pt="{
+                        bodyrow: { class: 'hover:bg-gray-50' },
+                        headercell: { class: 'py-2 px-2' },
+                        bodycell: { class: 'py-2 px-2' }
+                    }"
+                >
                     <Column
                         field="department"
                         header="Department"
-                        class="pl-4"
                     ></Column>
 
                     <Column
                         header="Actions"
-                        class="w-32"
-                        headerClass="!text-center justify-center"
-                        bodyClass="!text-center"
+                        class="w-24"
+                        headerClass="justify-end pr-4"
+                        bodyClass="text-right pr-4"
                     >
                         <template #body="{ data }">
-                            <div class="flex justify-center gap-1">
+                            <div class="flex justify-end gap-1">
                                 <PvButton
                                     icon="pi pi-pencil"
                                     variant="text"
                                     rounded
-                                    class="!text-emerald-500 hover:!bg-emerald-50"
+                                    class="!text-emerald-500 hover:!bg-emerald-50 !w-8 !h-8"
                                     @click="editDepartment(data)"
                                 />
 
@@ -242,7 +270,7 @@ export default defineComponent({
                                     icon="pi pi-trash"
                                     variant="text"
                                     rounded
-                                    class="!text-red-500 hover:!bg-red-50"
+                                    class="!text-red-500 hover:!bg-red-50 !w-8 !h-8"
                                     @click="deleteDepartment(data)"
                                 />
                             </div>
@@ -253,3 +281,5 @@ export default defineComponent({
         </div>
     </AppLayout>
 </template>
+
+

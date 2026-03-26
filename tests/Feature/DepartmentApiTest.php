@@ -89,3 +89,46 @@ it('can delete a department', function () {
     ]);
 
 });
+
+it('validates that a department name must be unique', function () {
+
+    $existing = Department::factory()->create(['department' => 'Engineering']);
+
+    $payload = ['department' => 'Engineering'];
+    $response = $this->postJson('/api/department', $payload);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['department']);
+
+    $response = $this->putJson("/api/department/{$existing->id}", [
+        'department' => 'Engineering',
+    ]);
+
+    $response->assertStatus(200)
+        ->assertJsonPath('data.department', 'Engineering');
+});
+
+it('the department field can not be empty', function () {
+    $response = $this->postJson('/api/department', [
+        'department' => '',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['department']);
+
+    $response = $this->postJson('/api/department', [
+        'department' => '   ',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['department']);
+
+    $department = Department::factory()->create();
+
+    $response = $this->putJson("/api/department/{$department->id}", [
+        'department' => '',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['department']);
+});

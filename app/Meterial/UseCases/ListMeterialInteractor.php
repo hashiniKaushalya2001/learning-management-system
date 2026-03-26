@@ -3,18 +3,26 @@
 namespace App\Meterial\UseCases;
 
 use App\Meterial\Entities\Models\Meterial;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Database\Eloquent\Collection;
 
 class ListMeterialInteractor
 {
-    public function execute(?string $search = null)
+    public function execute(?string $search = null): Collection
     {
-        $query = Meterial::query();
+        return Meterial::query()
 
-        if ($search) {
-            $query->where('meterial', 'like', "%{$search}%");
-        }
+            ->with(['department', 'course'])
 
-        return $query->with('department')->get();
+            ->when($search, function ($query) use ($search) {
+                $query->where('lecturer', 'like', "%{$search}%")
+                    ->orWhere('semester', 'like', "%{$search}%")
+                    ->orWhere('aim', 'like', "%{$search}%")
+
+                    ->orWhereHas('course', function ($q) use ($search) {
+                        $q->where('course', 'like', "%{$search}%");
+                    });
+            })
+            ->latest()
+            ->get();
     }
 }
