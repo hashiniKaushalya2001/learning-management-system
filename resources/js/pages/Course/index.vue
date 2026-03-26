@@ -85,13 +85,6 @@ export default defineComponent({
             }
         },
 
-        enableAddDepartment() {
-            this.department = '';
-            this.isAddingDepartment = true;
-            this.courses = [];
-            this.totalRecords = 0;
-        },
-
         addCourseRow() {
             this.courses.push({
                 id: null,
@@ -244,7 +237,7 @@ export default defineComponent({
                         v-if="!isAddingDepartment"
                         v-model="department"
                         :options="departments"
-                        placeholder="Select Department"
+                        optionLabel="department"  optionValue="department" placeholder="Select Department"
                         class="w-full md:w-96"
                     />
 
@@ -255,13 +248,6 @@ export default defineComponent({
                         class="w-full md:w-96"
                     />
 
-                    <PvButton
-                        label="Add"
-                        icon="pi pi-plus"
-                        severity="secondary"
-                        variant="outlined"
-                        @click="enableAddDepartment"
-                    />
                 </div>
             </div>
 
