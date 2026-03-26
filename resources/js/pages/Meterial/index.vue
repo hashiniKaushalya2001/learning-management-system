@@ -52,19 +52,8 @@ export default defineComponent({
         const loadData = async () => {
             try {
                 const deptRes = await axios.get('/api/departments');
-                const rawDepts = deptRes.data.data || deptRes.data;
 
-                if (Array.isArray(rawDepts)) {
-
-                    if (typeof rawDepts[0] === 'string') {
-                        departments.value = rawDepts.map((name: string, index: number) => ({
-                            id: index + 1,
-                            name: name
-                        }));
-                    } else {
-                        departments.value = rawDepts;
-                    }
-                }
+                departments.value = deptRes.data.data || deptRes.data;
 
                 const [courseRes, materialRes] = await Promise.all([
                     axios.get('/api/course'),
@@ -80,13 +69,17 @@ export default defineComponent({
 
         const getDeptName = (rowData: any) => {
 
-            if (rowData.department) {
-                if (typeof rowData.department === 'object') return rowData.department.department || rowData.department.name;
-                return rowData.department;
+            if (rowData.department && typeof rowData.department === 'object') {
+                return rowData.department.name || rowData.department.department;
             }
 
+            const deptId = rowData.department_id || rowData.department;
+            const found = departments.value.find(d => String(d.id) === String(deptId));
+
+            if (found) return found.name;
+
             if (rowData.course && rowData.course.department) {
-                return rowData.course.department;
+                return rowData.course.department.name || rowData.course.department;
             }
 
             return 'N/A';
@@ -121,7 +114,6 @@ export default defineComponent({
 
             setTimeout(() => {
                 selectedCourse.value = courses.value.find(c => c.id == data.course_id);
-                courseCode.value = selectedCourse.value ? selectedCourse.value.course_id : '';
             }, 100);
             materialRows.value = [{ duration: data.duration || '', file: null }];
         };
@@ -141,7 +133,7 @@ export default defineComponent({
         watch(selectedDepartment, (newDept) => {
             if (newDept) {
                 filteredCourses.value = courses.value.filter((c: any) =>
-                    String(c.department_id) === String(newDept.id) || String(c.department) === String(newDept.name)
+                    String(c.department_id) === String(newDept.id) || String(c.department) === String(newDept.department)
                 );
             } else {
                 filteredCourses.value = [];
@@ -157,7 +149,7 @@ export default defineComponent({
 
         const saveMeterial = async () => {
             if (!selectedDepartment.value) {
-                toast.add({ severity: 'warn', summary: 'Validation', detail: 'Department is required' });
+                toast.add({ severity: 'warn', summary: 'Validation', detail: 'Department is required', life: 3000 });
                 return;
             }
             const formData = new FormData();
@@ -181,11 +173,11 @@ export default defineComponent({
             try {
                 const url = isEditing.value ? `/api/meterial/${editingId.value}` : '/api/meterial';
                 await axios.post(url, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-                toast.add({ severity: 'success', summary: 'Success', detail: 'Successfully Saved ' });
+                toast.add({ severity: 'success', summary: 'Success', detail: 'Successfully Saved ',life: 3000 });
                 cancelEdit();
                 loadData();
             } catch {
-                toast.add({ severity: 'error', summary: 'Error', detail: 'Check required fields' });
+                toast.add({ severity: 'error', summary: 'Error', detail: 'Check required fields',life: 5000 });
             }
         };
 
@@ -203,23 +195,47 @@ export default defineComponent({
 
 <template>
     <AppLayout>
-        <Toast />
+        <Toast position="top-right" />
         <ConfirmDialog />
         <div class="p-6">
             <h1 class="text-2xl font-bold mb-6">{{ isEditing ? 'Edit Material' : 'Material Management' }}</h1>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8 mb-6">
                 <FloatLabel variant="on">
-                    <PvSelect id="department" v-model="selectedDepartment" :options="departments" optionLabel="name" fluid />
+                    <PvSelect
+                        id="department"
+                        v-model="selectedDepartment"
+                        :options="departments"
+                        optionLabel="department"
+                        fluid
+                    />
                     <label for="department">Department</label>
                 </FloatLabel>
                 <FloatLabel variant="on">
-                    <PvSelect id="course" v-model="selectedCourse" :options="filteredCourses" optionLabel="course" fluid :disabled="!selectedDepartment" />
-                    <label for="course">Course</label>
-                </FloatLabel>
-                <FloatLabel variant="on">
-                    <InputText id="courseCode" v-model="courseCode" class="w-full" readonly />
-                    <label for="courseCode">Course Code</label>
+                    <PvSelect
+                        id="course"
+                        v-model="selectedCourse"
+                        :options="filteredCourses"
+                        optionLabel="course"
+                        placeholder="Select a Course"
+                        fluid
+                        :disabled="!selectedDepartment"
+                    >
+                        <template #option="slotProps">
+                            <div class="flex justify-between">
+                                <span>{{ slotProps.option.course }}</span>
+                                <span class="text-gray-400 text-sm ml-4">({{ slotProps.option.course_id }})</span>
+                            </div>
+                        </template>
+
+                        <template #value="slotProps">
+                            <div v-if="slotProps.value">
+                                {{ slotProps.value.course }} ({{ slotProps.value.course_id }})
+                            </div>
+                            <span v-else>{{ slotProps.placeholder }}</span>
+                        </template>
+                    </PvSelect>
+                    <label for="course"></label>
                 </FloatLabel>
                 <FloatLabel variant="on">
                     <InputText id="lecturer" v-model="lecturer" class="w-full" />
@@ -229,12 +245,12 @@ export default defineComponent({
                     <InputText id="semester" v-model="semester" class="w-full" />
                     <label for="semester">Semester</label>
                 </FloatLabel>
-                <div class="md:col-span-2">
+
                     <FloatLabel variant="on">
                         <PvTextarea id="aim" v-model="aim" autoResize rows="3" class="w-full" />
-                        <label for="aim">Aim of the Material</label>
+                        <label for="aim">Aim </label>
                     </FloatLabel>
-                </div>
+
             </div>
 
             <div class="mt-8 border-t pt-6">
@@ -243,7 +259,7 @@ export default defineComponent({
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                         <FloatLabel variant="on">
                             <InputText v-model="row.duration" class="w-full" />
-                            <label>Duration</label>
+                            <label>Week Number</label>
                         </FloatLabel>
                         <div class="md:col-span-2">
                             <FileUpload mode="basic" name="file" accept=".pdf" :maxFileSize="2048000" @select="onFileSelect($event, index)" />
