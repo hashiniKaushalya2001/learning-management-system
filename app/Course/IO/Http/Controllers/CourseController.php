@@ -16,8 +16,7 @@ class CourseController
     public function index(ListCourseInteractor $listCourseInteractor): JsonResponse
     {
         return $listCourseInteractor->execute(
-            request('search'),
-            request('per_page')
+            request('search')
         );
     }
 

@@ -114,12 +114,12 @@ export default defineComponent({
                     const validationErrors = error.response.data.errors;
                     const errorMessage = validationErrors.department ? validationErrors.department[0] : 'Validation failed';
 
-                this.$toast.add({
-                    severity: 'error',
-                    summary: 'Validation Error',
-                    detail: errorMessage,
-                    life: 4000
-                });
+                    this.$toast.add({
+                        severity: 'error',
+                        summary: 'Validation Error',
+                        detail: errorMessage,
+                        life: 4000
+                    });
                 } else {
                     this.$toast.add({
                         severity: 'error',
@@ -219,7 +219,7 @@ export default defineComponent({
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 max-w-4xl">
                 <div class="mb-4 flex justify-end">
                     <span class="relative">
                         <InputText
@@ -238,34 +238,31 @@ export default defineComponent({
                     :totalRecords="totalRecords"
                     @page="e => { first = e.first; rows = e.rows; }"
                     responsiveLayout="scroll"
+                    class="p-datatable-sm"
+                    :pt="{
+                        bodyrow: { class: 'hover:bg-gray-50' },
+                        headercell: { class: 'py-2 px-2' },
+                        bodycell: { class: 'py-2 px-2' }
+                    }"
                 >
-                    <Column
-                        field="id"
-                        header="ID"
-                        class="w-16"
-                        headerClass="justify-center"
-                        bodyClass="text-center"
-                    ></Column>
-
                     <Column
                         field="department"
                         header="Department"
-                        class="pl-4"
                     ></Column>
 
                     <Column
                         header="Actions"
-                        class="w-32"
-                        headerClass="justify-center"
-                        bodyClass="text-center"
+                        class="w-24"
+                        headerClass="justify-end pr-4"
+                        bodyClass="text-right pr-4"
                     >
                         <template #body="{ data }">
-                            <div class="flex justify-center gap-1">
+                            <div class="flex justify-end gap-1">
                                 <PvButton
                                     icon="pi pi-pencil"
                                     variant="text"
                                     rounded
-                                    class="!text-emerald-500 hover:!bg-emerald-50"
+                                    class="!text-emerald-500 hover:!bg-emerald-50 !w-8 !h-8"
                                     @click="editDepartment(data)"
                                 />
 
@@ -273,7 +270,7 @@ export default defineComponent({
                                     icon="pi pi-trash"
                                     variant="text"
                                     rounded
-                                    class="!text-red-500 hover:!bg-red-50"
+                                    class="!text-red-500 hover:!bg-red-50 !w-8 !h-8"
                                     @click="deleteDepartment(data)"
                                 />
                             </div>
@@ -284,3 +281,5 @@ export default defineComponent({
         </div>
     </AppLayout>
 </template>
+
+

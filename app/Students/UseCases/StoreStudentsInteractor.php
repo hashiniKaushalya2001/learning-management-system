@@ -2,6 +2,7 @@
 
 namespace App\Students\UseCases;
 
+use App\Course\Entities\Models\Course;
 use App\Department\Entities\Models\Department;
 use App\Students\Entities\Models\Students;
 use App\Students\UseCases\Requests\StudentsRequest;
@@ -11,7 +12,7 @@ class StoreStudentsInteractor
 {
     public function execute(StudentsRequest $request): JsonResponse
     {
-        $department = Department::findOrFail($request->department);
+        $department = Course::where('department', $request->department)->firstOrFail();
 
         $student = Students::create([
             'name' => $request->name,

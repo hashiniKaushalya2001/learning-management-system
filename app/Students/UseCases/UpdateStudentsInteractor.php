@@ -12,7 +12,7 @@ class UpdateStudentsInteractor
     public function execute(int $id, StudentsRequest $request): JsonResponse
     {
         $student = Students::findOrFail($id);
-        $department = Department::findOrFail($request->department);
+        $department = Department::where('department', $request->department)->firstOrFail();
 
         $student->update([
             'name' => $request->name,

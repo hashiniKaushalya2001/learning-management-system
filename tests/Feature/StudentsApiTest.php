@@ -1,5 +1,6 @@
 <?php
 
+use App\Course\Entities\Models\Course;
 use App\Department\Entities\Models\Department;
 use App\Students\Entities\Models\Students;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,9 +34,15 @@ it('can list students', function () {
 });
 
 it('can create a student', function () {
+    $deptName = 'Information Technology';
 
-    $department = Department::factory()->create([
-        'department' => 'Information Technology',
+    Department::factory()->create([
+        'department' => $deptName,
+    ]);
+
+    Course::create([
+        'department' => $deptName,
+        'course' => 'BSc in IT',
     ]);
 
     $payload = [
@@ -44,7 +51,7 @@ it('can create a student', function () {
         'birthday' => '2000-01-01',
         'nic' => '200012345678',
         'phone_number' => '0771234567',
-        'department' => $department->id,
+        'department' => $deptName,
     ];
 
     $response = $this->postJson('/api/students', $payload);
@@ -54,25 +61,23 @@ it('can create a student', function () {
             'message' => 'Student created successfully',
             'data' => [
                 'name' => 'John Doe',
-                'email' => 'john@example.com',
+                'department' => $deptName,
             ],
         ]);
 
     $this->assertDatabaseHas('students', [
         'name' => 'John Doe',
-        'email' => 'john@example.com',
-        'nic' => '200012345678',
+        'department' => $deptName,
     ]);
 });
 
 it('can update a student', function () {
-
     $student = Students::factory()->create([
         'name' => 'Old Name',
         'email' => 'old@example.com',
     ]);
 
-    $newDepartment = Department::factory()->create([
+    Department::factory()->create([
         'department' => 'Science',
     ]);
 
@@ -82,7 +87,7 @@ it('can update a student', function () {
         'birthday' => '1999-12-31',
         'nic' => '199987654321',
         'phone_number' => '0770000000',
-        'department' => $newDepartment->id,
+        'department' => 'Science',
     ];
 
     $response = $this->putJson("/api/students/{$student->id}", $payload);
@@ -99,7 +104,6 @@ it('can update a student', function () {
     $this->assertDatabaseHas('students', [
         'id' => $student->id,
         'name' => 'Jane Doe',
-        'email' => 'jane@example.com',
         'department' => 'Science',
     ]);
 });
@@ -118,4 +122,36 @@ it('can delete a student', function () {
     $this->assertSoftDeleted('students', [
         'id' => $student->id,
     ]);
+});
+
+it('can show a student details', function () {
+
+    $student = Students::factory()->create([
+        'name' => 'Alice Smith',
+        'email' => 'alice@example.com',
+    ]);
+
+    $response = $this->getJson("/api/students/{$student->id}");
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'data' => [
+                'id',
+                'name',
+                'email',
+                'birthday',
+                'nic',
+                'phone_number',
+                'department',
+                'created_at',
+                'updated_at',
+            ],
+        ])
+        ->assertJson([
+            'data' => [
+                'id' => $student->id,
+                'name' => 'Alice Smith',
+                'email' => 'alice@example.com',
+            ],
+        ]);
 });

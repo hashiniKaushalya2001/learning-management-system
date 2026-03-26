@@ -397,7 +397,7 @@ export default defineComponent({
 
                 <div class="mt-6 flex justify-end border-t pt-4">
                     <PvButton
-                        label="Save All"
+                        label="Save"
                         icon="pi pi-check"
                         class="border-none bg-emerald-500 px-6 text-white"
                         @click="saveCourses"

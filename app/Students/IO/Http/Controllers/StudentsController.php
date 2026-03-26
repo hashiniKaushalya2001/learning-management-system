@@ -5,6 +5,7 @@ namespace App\Students\IO\Http\Controllers;
 use App\Students\UseCases\DeleteStudentsInteractor;
 use App\Students\UseCases\ListStudentsInteractor;
 use App\Students\UseCases\Requests\StudentsRequest;
+use App\Students\UseCases\ShowStudentsInteractor;
 use App\Students\UseCases\StoreStudentsInteractor;
 use App\Students\UseCases\UpdateStudentsInteractor;
 use Illuminate\Http\JsonResponse;
@@ -36,5 +37,14 @@ class StudentsController
     public function destroy(int $id, DeleteStudentsInteractor $interactor): JsonResponse
     {
         return $interactor->execute($id);
+    }
+
+    public function showData(string $id, ShowStudentsInteractor $interactor): JsonResponse
+    {
+        $student = $interactor->execute($id);
+
+        return response()->json([
+            'data' => $student,
+        ], 200);
     }
 }

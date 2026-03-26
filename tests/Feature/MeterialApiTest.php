@@ -43,7 +43,7 @@ it('can create a meterials', function () {
 
     $course = Course::factory()->create([
         'department' => $department->id,
-        'course' => 'Laravel', // Matches Interactor
+        'course' => 'Laravel',
     ]);
 
     $file = UploadedFile::fake()->create('notes.pdf', 100);

@@ -2,7 +2,6 @@
 
 namespace App\Meterial\UseCases\Requests;
 
-use Illuminate\Http\UploadedFile;
 use Spatie\LaravelData\Attributes\Validation\Rule as SpatieRule;
 use Spatie\LaravelData\Data;
 
@@ -23,7 +22,6 @@ class MeterialRequest extends Data
     #[SpatieRule(['required', 'string'])]
     public string $semester;
 
-    /** @var UploadedFile[] */
     #[SpatieRule(['required', 'array', 'min:1'])]
     public array $meterial;
 
