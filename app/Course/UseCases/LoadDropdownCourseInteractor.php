@@ -10,7 +10,8 @@ class LoadDropdownCourseInteractor
     public function execute(): JsonResponse
     {
         $departments = Department::query()
-            ->pluck('department');
+            ->select('id', 'department')
+            ->get();
 
         return response()->json([
             'data' => $departments,

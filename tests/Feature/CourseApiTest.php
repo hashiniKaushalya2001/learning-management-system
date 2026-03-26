@@ -127,8 +127,8 @@ test('can load data for dropdown from departments table', function () {
         ->assertJsonCount(2, 'data')
         ->assertJson([
             'data' => [
-                'IT',
-                'Finance',
+                ['department' => 'IT'],
+                ['department' => 'Finance'],
             ],
         ]);
 });

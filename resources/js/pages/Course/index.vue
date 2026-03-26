@@ -237,7 +237,7 @@ export default defineComponent({
                         v-if="!isAddingDepartment"
                         v-model="department"
                         :options="departments"
-                        placeholder="Select Department"
+                        optionLabel="department"  optionValue="department" placeholder="Select Department"
                         class="w-full md:w-96"
                     />
 

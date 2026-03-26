@@ -13,7 +13,7 @@ it('can list meterials', function () {
 
     Meterial::factory()->count(3)->create();
 
-    $response = $this->getJson('/api/meterial');
+    $this->getJson('/api/meterial');
 
     $response = $this->getJson('/api/meterial');
 
