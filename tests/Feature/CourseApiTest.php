@@ -1,6 +1,7 @@
 <?php
 
 use App\Course\Entities\Models\Course;
+use App\Department\Entities\Models\Department;
 
 test('can list courses', function () {
 
@@ -115,30 +116,21 @@ test('can delete a courses', function () {
     ]);
 });
 
-test('can load data for dropdown', function () {
+test('can load data for dropdown from departments table', function () {
 
-    Course::factory()->create([
-        'department' => 'IT',
-    ]);
-
-    Course::factory()->create([
-        'department' => 'Finance',
-    ]);
-
-    Course::factory()->create([
-        'department' => 'IT',
-    ]);
+    Department::factory()->create(['department' => 'IT']);
+    Department::factory()->create(['department' => 'Finance']);
 
     $response = $this->getJson('/api/departments');
 
     $response->assertStatus(200)
+        ->assertJsonCount(2, 'data')
         ->assertJson([
             'data' => [
                 'IT',
                 'Finance',
             ],
         ]);
-
 });
 
 test('can load data for table', function () {
