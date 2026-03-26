@@ -45,3 +45,47 @@ it('can create a department', function () {
         'department' => 'Finance',
     ]);
 });
+
+it('can update a department', function () {
+
+    $department = Department::factory()->create([
+        'department' => 'Finance',
+    ]);
+
+    $payload = [
+        'department' => 'Human Resource',
+    ];
+
+    $response = $this->putJson("/api/department/{$department->id}", $payload);
+
+    $response->assertStatus(200)
+        ->assertJson([
+            'data' => [
+                'id' => $department->id,
+                'department' => 'Human Resource',
+            ],
+            'message' => 'Department updated successfully',
+        ]);
+
+    $this->assertDatabaseHas('departments', [
+        'id' => $department->id,
+        'department' => 'Human Resource',
+    ]);
+});
+
+it('can delete a department', function () {
+
+    $department = Department::factory()->create();
+
+    $response = $this->deleteJson("/api/department/{$department->id}");
+
+    $response->assertStatus(200)
+        ->assertJson([
+            'message' => 'Department deleted successfully',
+        ]);
+
+    $this->assertSoftDeleted('departments', [
+        'id' => $department->id,
+    ]);
+
+});

@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import PlaceholderPattern from '@/components/PlaceholderPattern.vue';
+import Card from 'primevue/card';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import type { BreadcrumbItem } from '@/types';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-    },
+const breadcrumbs = [
+    { title: 'Dashboard', href: '/dashboard' }
+];
+
+const stats = [
+    { label: 'Admin', icon: 'pi pi-shield', colorClass: 'text-blue-500', bgClass: 'bg-blue-50' },
+    { label: 'Users', icon: 'pi pi-users', colorClass: 'text-orange-500', bgClass: 'bg-orange-50' },
+    { label: 'Roles', icon: 'pi pi-lock', colorClass: 'text-cyan-500', bgClass: 'bg-cyan-50' }
 ];
 </script>
 
@@ -17,31 +18,53 @@ const breadcrumbs: BreadcrumbItem[] = [
     <Head title="Dashboard" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div
-            class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4"
-        >
-            <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-                <div
-                    class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
-                >
-                    <PlaceholderPattern />
-                </div>
-                <div
-                    class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
-                >
-                    <PlaceholderPattern />
-                </div>
-                <div
-                    class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
-                >
-                    <PlaceholderPattern />
-                </div>
-            </div>
-            <div
-                class="relative min-h-[100vh] flex-1 rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border"
-            >
-                <PlaceholderPattern />
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <Card class="shadow-sm border-none ring-1 ring-gray-200 !rounded-lg overflow-hidden">
+                    <template #content>
+                        <div class="flex items-center justify-between p-2">
+                            <span class="text-gray-600 font-medium">{{ stats[0].label }}</span>
+                            <div class="flex items-center justify-center size-10 rounded bg-blue-50 border border-blue-100">
+                                <i :class="[stats[0].icon, 'text-blue-500 text-lg']"></i>
+                            </div>
+                        </div>
+                    </template>
+                </Card>
+
+                <Card class="shadow-sm border-none ring-1 ring-gray-200 !rounded-lg overflow-hidden">
+                    <template #content>
+                        <div class="flex items-center justify-between p-2">
+                            <span class="text-gray-600 font-medium">{{ stats[1].label }}</span>
+                            <div class="flex items-center justify-center size-10 rounded bg-orange-50 border border-orange-100">
+                                <i :class="[stats[1].icon, 'text-orange-500 text-lg']"></i>
+                            </div>
+                        </div>
+                    </template>
+                </Card>
+
+                <Card class="shadow-sm border-none ring-1 ring-gray-200 !rounded-lg overflow-hidden">
+                    <template #content>
+                        <div class="flex items-center justify-between p-2">
+                            <span class="text-gray-600 font-medium">Permission</span>
+                            <div class="flex items-center justify-center size-10 rounded bg-cyan-50 border border-cyan-100">
+                                <i class="pi pi-key text-cyan-500 text-lg"></i>
+                            </div>
+                        </div>
+                    </template>
+                </Card>
+
             </div>
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+
+:deep(.p-card-body) {
+    padding: 1rem !important;
+}
+:deep(.p-card-content) {
+    padding: 0 !important;
+}
+</style>
