@@ -34,6 +34,7 @@
     },
     "dependencies": {
         "@inertiajs/vue3": "^2.3.7",
+        "@primevue/themes": "^4.5.4",
         "@vueuse/core": "^12.8.2",
         "axios": "^1.13.6",
         "class-variance-authority": "^0.7.1",

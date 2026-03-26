@@ -1,100 +1,178 @@
-<script setup lang="ts">
+<script lang="ts">
 import axios from 'axios';
 import PvButton from 'primevue/button';
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
 import Dialog from 'primevue/dialog';
-import { useToast } from 'primevue/usetoast';
-import { ref, onMounted } from 'vue';
+import FloatLabel from 'primevue/floatlabel';
+import InputText from 'primevue/inputtext';
+import Toast from 'primevue/toast';
+import { defineComponent } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import 'primeicons/primeicons.css';
 
 interface Department {
     id: number;
     department: string;
 }
 
-const toast = useToast();
+export default defineComponent({
+    name: 'DepartmentManagement',
+    components: {
+        AppLayout,
+        InputText,
+        PvButton,
+        FloatLabel,
+        DataTable,
+        Column,
+        PvDialog: Dialog,
+        PvToast: Toast
+    },
 
-const departments = ref<Department[]>([]);
-const departmentName = ref<string>('');
-const editingId = ref<number | null>(null);
+    data() {
+        return {
+            departments: [] as Department[],
+            departmentName: '',
+            editingId: null as number | null,
+            showConfirm: false,
+            confirmMessage: '',
+            confirmTitle: '',
+            confirmAction: null as (() => void) | null,
+            search: '',
+            first: 0,
+            rows: 10,
+            totalRecords: 0,
+        };
+    },
 
-const showConfirm = ref(false);
-const confirmMessage = ref('');
-const confirmTitle = ref('');
-const confirmAction = ref<(() => void) | null>(null);
+    mounted() {
+        this.loadDepartments();
+    },
 
-const loadDepartments = async () => {
-    try {
-        const response = await axios.get('/api/department');
-        departments.value = response.data.data;
-    } catch (error) {
-        console.error('Failed to load departments:', error);
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load departments', life: 3000 });
-    }
-};
+    methods: {
+        async loadDepartments() {
+            try {
+                const response = await axios.get('/api/department');
+                this.departments = response.data.data;
 
-const editDepartment = (dept: Department) => {
-    departmentName.value = dept.department;
-    editingId.value = dept.id;
-};
+                this.totalRecords = this.departments.length;
+            } catch (error) {
+                console.error('Failed to load departments:', error);
+                this.$toast.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'Failed to load departments',
+                    life: 3000
+                });
+            }
+        },
 
-const saveDepartment = async () => {
-    if (!departmentName.value.trim()) {
-        toast.add({ severity: 'warn', summary: 'Warning', detail: 'Department name cannot be empty', life: 3000 });
-        return;
-    }
+        editDepartment(dept: Department) {
+            this.departmentName = dept.department;
+            this.editingId = dept.id;
+        },
 
-    try {
-        if (editingId.value) {
-            await axios.put(`/api/department/${editingId.value}`, { department: departmentName.value });
-            toast.add({ severity: 'success', summary: 'Updated', detail: `Department "${departmentName.value}" updated successfully`, life: 3000 });
-        } else {
-            await axios.post('/api/department', { department: departmentName.value });
-            toast.add({ severity: 'success', summary: 'Created', detail: `Department "${departmentName.value}" created successfully`, life: 3000 });
+        async saveDepartment() {
+            if (!this.departmentName.trim()) {
+                this.$toast.add({
+                    severity: 'warn',
+                    summary: 'Warning',
+                    detail: 'Department name cannot be empty',
+                    life: 3000
+                });
+                return;
+            }
+
+            try {
+                if (this.editingId) {
+                    await axios.put(`/api/department/${this.editingId}`, {
+                        department: this.departmentName
+                    });
+                    this.$toast.add({
+                        severity: 'success',
+                        summary: 'Updated',
+                        detail: `Department "${this.departmentName}" updated successfully`,
+                        life: 3000
+                    });
+                } else {
+                    await axios.post('/api/department', {
+                        department: this.departmentName
+                    });
+                    this.$toast.add({
+                        severity: 'success',
+                        summary: 'Created',
+                        detail: `Department "${this.departmentName}" created successfully`,
+                        life: 3000
+                    });
+                }
+
+                this.departmentName = '';
+                this.editingId = null;
+                this.loadDepartments();
+            } catch (error: any) {
+                if (error.response && error.response.status === 422) {
+                    const validationErrors = error.response.data.errors;
+                    const errorMessage = validationErrors.department ? validationErrors.department[0] : 'Validation failed';
+
+                    this.$toast.add({
+                        severity: 'error',
+                        summary: 'Validation Error',
+                        detail: errorMessage,
+                        life: 4000
+                    });
+                } else {
+                    this.$toast.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'Save failed. Please try again.',
+                        life: 3000
+                    });
+                }
+            }
+        },
+
+        deleteDepartment(dept: Department) {
+            this.confirmTitle = 'Delete Department';
+            this.confirmMessage = `Are you sure you want to delete "${dept.department}"? This action cannot be undone.`;
+            this.confirmAction = async () => {
+                try {
+                    await axios.delete(`/api/department/${dept.id}`);
+                    this.$toast.add({
+                        severity: 'success',
+                        summary: 'Deleted',
+                        detail: `"${dept.department}" deleted successfully`,
+                        life: 3000
+                    });
+                    this.loadDepartments();
+                } catch {
+                    this.$toast.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'Delete failed',
+                        life: 3000
+                    });
+                }
+            };
+            this.showConfirm = true;
+        },
+
+        acceptConfirm() {
+            this.showConfirm = false;
+            if (this.confirmAction) this.confirmAction();
+        },
+
+        rejectConfirm() {
+            this.showConfirm = false;
         }
-
-        departmentName.value = '';
-        editingId.value = null;
-        loadDepartments();
-    } catch {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Save failed', life: 3000 });
     }
-};
-
-const deleteDepartment = (dept: Department) => {
-    confirmTitle.value = 'Delete Department';
-    confirmMessage.value = `Are you sure you want to delete "${dept.department}"? This action cannot be undone.`;
-    confirmAction.value = async () => {
-        try {
-            await axios.delete(`/api/department/${dept.id}`);
-            toast.add({ severity: 'success', summary: 'Deleted', detail: `"${dept.department}" deleted successfully`, life: 3000 });
-            loadDepartments();
-        } catch {
-            toast.add({ severity: 'error', summary: 'Error', detail: 'Delete failed', life: 3000 });
-        }
-    };
-    showConfirm.value = true;
-};
-
-const acceptConfirm = () => {
-    showConfirm.value = false;
-    confirmAction.value?.();
-};
-
-const rejectConfirm = () => {
-    showConfirm.value = false;
-};
-
-onMounted(() => {
-    loadDepartments();
 });
 </script>
 
 <template>
     <AppLayout>
+        <PvToast position="top-right" />
 
-        <Toast position="top-right" />
-
-        <Dialog
+        <PvDialog
             v-model:visible="showConfirm"
             :header="confirmTitle"
             :modal="true"
@@ -111,55 +189,97 @@ onMounted(() => {
                 <PvButton label="Delete" severity="danger" @click="acceptConfirm" />
                 <PvButton label="Cancel" severity="secondary" @click="rejectConfirm" />
             </template>
-        </Dialog>
+        </PvDialog>
 
         <div class="p-6">
             <h1 class="text-2xl font-bold mb-6">Department Management</h1>
 
-            <div class="flex gap-2 mb-6">
-                <input
-                    v-model="departmentName"
-                    type="text"
-                    placeholder="Enter Department"
-                    class="border rounded p-2 bg-white text-black "
-                />
-                <button
-                    @click="saveDepartment"
-                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                    {{ editingId ? 'Update' : 'Save' }}
-                </button>
-                <button
-                    v-if="editingId"
-                    @click="editingId = null; departmentName=''"
-                    class="bg-gray-500 text-white px-4 py-2 rounded"
-                >
-                    Cancel
-                </button>
+            <div class="flex flex-wrap items-center gap-4 mb-8 max-w-2xl">
+                <div class="flex-grow">
+                    <FloatLabel variant="on">
+                        <InputText id="deptName" v-model="departmentName" class="w-full" />
+                        <label for="deptName">Department Name</label>
+                    </FloatLabel>
+                </div>
+
+                <div class="flex gap-2">
+                    <PvButton
+                        :label="editingId ? 'Update' : 'Save'"
+                        icon="pi pi-check"
+                        class="bg-emerald-500 border-none px-6 text-white"
+                        @click="saveDepartment"
+                    />
+                    <PvButton
+                        v-if="editingId"
+                        label="Cancel"
+                        severity="secondary"
+                        variant="text"
+                        @click="editingId = null; departmentName = ''"
+                    />
+                </div>
             </div>
 
-            <table class="w-full border-collapse border border-gray-300">
-                <thead class="bg-gray-100">
-                <tr>
-                    <th class="border p-2">ID</th>
-                    <th class="border p-2">Department</th>
-                    <th class="border p-2">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="dept in departments" :key="dept.id" class="text-gray-800">
-                    <td class="border p-2 text-center">{{ dept.id }}</td>
-                    <td class="border p-2">{{ dept.department }}</td>
-                    <td class="border p-2 text-center space-x-2">
-                        <button @click="editDepartment(dept)" class="bg-yellow-500 text-white px-3 py-1 rounded">Edit</button>
-                        <button @click="deleteDepartment(dept)" class="bg-red-600 text-white px-3 py-1 rounded">Delete</button>
-                    </td>
-                </tr>
-                <tr v-if="departments.length === 0">
-                    <td colspan="3" class="p-4 text-center text-gray-500">No departments found.</td>
-                </tr>
-                </tbody>
-            </table>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 max-w-4xl">
+                <div class="mb-4 flex justify-end">
+                    <span class="relative">
+                        <InputText
+                            v-model="search"
+                            placeholder="Search departments..."
+                            class="w-64 pl-10"
+                        />
+                    </span>
+                </div>
+
+                <DataTable
+                    :value="departments.filter(d => d.department.toLowerCase().includes(search.toLowerCase()))"
+                    :paginator="true"
+                    :rows="rows"
+                    :first="first"
+                    :totalRecords="totalRecords"
+                    @page="e => { first = e.first; rows = e.rows; }"
+                    responsiveLayout="scroll"
+                    class="p-datatable-sm"
+                    :pt="{
+                        bodyrow: { class: 'hover:bg-gray-50' },
+                        headercell: { class: 'py-2 px-2' },
+                        bodycell: { class: 'py-2 px-2' }
+                    }"
+                >
+                    <Column
+                        field="department"
+                        header="Department"
+                    ></Column>
+
+                    <Column
+                        header="Actions"
+                        class="w-24"
+                        headerClass="justify-end pr-4"
+                        bodyClass="text-right pr-4"
+                    >
+                        <template #body="{ data }">
+                            <div class="flex justify-end gap-1">
+                                <PvButton
+                                    icon="pi pi-pencil"
+                                    variant="text"
+                                    rounded
+                                    class="!text-emerald-500 hover:!bg-emerald-50 !w-8 !h-8"
+                                    @click="editDepartment(data)"
+                                />
+
+                                <PvButton
+                                    icon="pi pi-trash"
+                                    variant="text"
+                                    rounded
+                                    class="!text-red-500 hover:!bg-red-50 !w-8 !h-8"
+                                    @click="deleteDepartment(data)"
+                                />
+                            </div>
+                        </template>
+                    </Column>
+                </DataTable>
+            </div>
         </div>
     </AppLayout>
 </template>
+
+

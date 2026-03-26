@@ -183,3 +183,42 @@ test('can load data for table', function () {
         $this->assertEquals('IT', $course['department']);
     }
 });
+
+it('validates that a course id must be unique', function () {
+    $existing = Course::factory()->create([
+        'course_id' => 'CS101',
+        'course' => 'Computer Science',
+        'department' => 'IT',
+    ]);
+
+    $payload = [
+        'department' => 'IT',
+        'courses' => [
+            ['course_id' => 'CS101', 'course' => 'Different Course'],
+        ],
+    ];
+    $this->postJson('/api/course', $payload)
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['courses.0.course_id']);
+
+    $updateData = [
+        'id' => $existing->id,
+        'course' => 'Updated CS Name',
+    ];
+
+    $this->putJson("/api/course/{$existing->id}", $updateData)
+        ->assertStatus(200)
+        ->assertJsonPath('data.course', 'Updated CS Name');
+});
+
+it('requires at least one course when creating a department', function () {
+    $payload = [
+        'department' => 'IT',
+        'courses' => [],
+    ];
+
+    $response = $this->postJson('/api/course', $payload);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['courses']);
+});

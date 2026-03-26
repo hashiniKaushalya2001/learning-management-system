@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
@@ -21,3 +22,15 @@ Route::get('/departments', function () {
 Route::get('/course', function () {
     return Inertia::render('Course/index');
 });
+
+Route::get('/meterial', function () {
+    return Inertia::render('Meterial/index');
+});
+
+Route::get('/students', function () {
+    return Inertia::render('Students/index');
+});
+
+Route::get('/download-pdf/{path}', function ($path) {
+    return Storage::disk('local')->response($path);
+})->where('path', '.*');

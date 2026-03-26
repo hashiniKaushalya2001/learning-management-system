@@ -2,19 +2,21 @@
 
 namespace App\Department\UseCases\Requests;
 
-use Dflydev\DotAccessData\Data;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class DepartmentRequest extends Data
+class DepartmentRequest extends FormRequest
 {
-    public ?string $department;
-
-    public static function rules(): array
+    public function rules(): array
     {
+        $departmentId = $this->route('department');
+
         return [
             'department' => [
                 'required',
-                Rule::unique('departments', 'department'),
+                'string',
+                'max:255',
+                Rule::unique('departments', 'department')->ignore($departmentId),
             ],
         ];
     }

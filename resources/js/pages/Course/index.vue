@@ -1,320 +1,409 @@
-<script setup lang="ts">
-import axios from 'axios'
-import PvButton from 'primevue/button'
-import { useToast } from 'primevue/usetoast'
-import { ref, onMounted, watch } from 'vue'
-import AppLayout from '@/layouts/AppLayout.vue'
-
-const toast = useToast()
+<script lang="ts">
+import axios from 'axios';
+import PvButton from 'primevue/button';
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
+import InputText from 'primevue/inputtext';
+import Select from 'primevue/select';
+import Toast from 'primevue/toast';
+import { defineComponent } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
+import 'primeicons/primeicons.css';
 
 interface Course {
-    id: number | null
-    course_id: string
-    course: string
+    id: number | null;
+    course_id: string;
+    course: string;
 }
 
-const department = ref('')
-const departments = ref<string[]>([])
-const isAddingDepartment = ref(false)
+export default defineComponent({
+    name: 'CourseManagement',
+    components: {
+        AppLayout,
+        PvButton,
+        InputText,
+        PvSelect: Select,
+        DataTable,
+        Column,
+        PvToast: Toast,
+    },
 
-const courses = ref<Course[]>([
-    { id: null, course_id: '', course: '' }
-])
+    data() {
+        return {
+            department: '',
+            departments: [] as string[],
+            isAddingDepartment: false,
+            courses: [] as Course[],
+            editingIndex: null as number | null,
+            search: '',
+            first: 0,
+            rows: 10,
+            totalRecords: 0,
+        };
+    },
 
-const editingIndex = ref<number | null>(null)
+    watch: {
+        department() {
+            if (!this.isAddingDepartment) {
+                this.editingIndex = null;
+                this.fetchCourses();
+            }
+        },
+    },
 
-const fetchDepartments = async () => {
-    try{
-        const res = await axios.get('/api/departments')
-        departments.value = res.data.data
-    }catch(e){
-        console.error(e)
-    }
-}
+    mounted() {
+        this.fetchDepartments();
+    },
 
-const fetchCourses = async () => {
-    if(!department.value) return
+    methods: {
+        async fetchDepartments() {
+            try {
+                const res = await axios.get('/api/departments');
+                this.departments = res.data.data;
+            } catch (e) {
+                console.error(e);
+            }
+        },
 
-    try{
-        const res = await axios.get(`/api/course/department/${department.value}`)
+        async fetchCourses() {
+            if (!this.department) {
+                this.courses = [];
+                this.totalRecords = 0;
+                return;
+            }
+            try {
+                const res = await axios.get(
+                    `/api/course/department/${this.department}`,
+                );
+                this.courses = res.data.data || [];
+                this.totalRecords = this.courses.length;
+                this.first = 0;
+            } catch (e) {
+                console.error(e);
+                this.courses = [];
+                this.totalRecords = 0;
+            }
+        },
 
-        courses.value = res.data.data.length
-            ? res.data.data
-            : [{ id:null, course_id:'', course:'' }]
-    }catch(e){
-        console.error(e)
-    }
-}
+        enableAddDepartment() {
+            this.department = '';
+            this.isAddingDepartment = true;
+            this.courses = [];
+            this.totalRecords = 0;
+        },
 
-watch(department, () => {
-    if(!isAddingDepartment.value){
-        editingIndex.value = null
-        fetchCourses()
-    }
-})
+        addCourseRow() {
+            this.courses.push({
+                id: null,
+                course_id: '',
+                course: '',
+            });
+            this.editingIndex = this.courses.length - 1;
+            this.totalRecords = this.courses.length;
 
-onMounted(()=>{
-    fetchDepartments()
-})
+            this.first =
+                Math.floor((this.totalRecords - 1) / this.rows) * this.rows;
+        },
 
-const enableAddDepartment = () => {
-    department.value=''
-    isAddingDepartment.value=true
-    courses.value=[{id:null,course_id:'',course:''}]
-}
+        async removeCourseRow(index: number) {
+            const course = this.courses[index];
+            try {
+                if (course.id) {
+                    await axios.delete(`/api/course/${course.id}`);
+                    this.$toast.add({
+                        severity: 'success',
+                        summary: 'Deleted',
+                        detail: 'Course removed successfully',
+                        life: 3000,
+                    });
+                }
+                this.courses.splice(index, 1);
+                this.totalRecords = this.courses.length;
+            } catch {
+                this.$toast.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'Failed to delete course',
+                    life: 3000,
+                });
+            }
+        },
 
-const addCourseRow = () => {
+        editCourseRow(index: number) {
+            this.editingIndex = index;
+        },
 
-    courses.value.push({
-        id: null,
-        course_id: '',
-        course: ''
-    })
-
-    editingIndex.value = courses.value.length - 1
-}
-
-const removeCourseRow = async (index:number) => {
-
-    const course = courses.value[index]
-
-    try{
-
-        if(course.id){
-            await axios.delete(`/api/course/${course.id}`)
-
-            toast.add({
-                severity:'success',
-                summary:'Deleted',
-                detail:'Course removed successfully',
-                life:3000
-            })
-        }
-
-        courses.value.splice(index,1)
-
-        if(courses.value.length === 0){
-            courses.value.push({id:null,course_id:'',course:''})
-        }
-
-    }catch(error){
-        toast.add({
-            severity:'error',
-            summary:'Error',
-            detail:'Failed to delete course',
-            life:3000
-        })
-        console.error(error)
-    }
-}
-
-const editCourseRow = (index:number) => {
-    editingIndex.value = index
-}
-
-const saveCourses = async () => {
-
-    if(!department.value){
-        toast.add({severity:'warn',summary:'Warning',detail:'Department is required',life:3000})
-        return
-    }
-
-    for(const [i, course] of courses.value.entries()){
-        if(!course.course_id || !course.course){
-            toast.add({
-                severity:'warn',
-                summary:'Warning',
-                detail:`Course ID and Name are required in row ${i + 1}`,
-                life:3000
-            })
-            return
-        }
-    }
-
-    try{
-
-        for(const course of courses.value){
-
-            if(course.id){
-                await axios.put(`/api/course/${course.id}`,{
-                    id: course.id,
-                    course: course.course
-                })
+        async saveCourses() {
+            if (!this.department) {
+                this.$toast.add({
+                    severity: 'warn',
+                    summary: 'Warning',
+                    detail: 'Department is required',
+                    life: 3000,
+                });
+                return;
+            }
+            if (this.courses.length === 0) {
+                this.$toast.add({
+                    severity: 'warn',
+                    summary: 'Warning',
+                    detail: 'You must add at least one course before saving.',
+                    life: 3000
+                });
+                return;
             }
 
-            else{
-                await axios.post('/api/course',{
-                    department: department.value,
-                    courses:[course]
-                })
+            for (const [i, course] of this.courses.entries()) {
+                if (!course.course_id || !course.course) {
+                    this.$toast.add({
+                        severity: 'warn',
+                        summary: 'Warning',
+                        detail: `Course ID and Name are required in row ${i + 1}`,
+                        life: 3000,
+                    });
+                    return;
+                }
             }
 
-        }
+            try {
+                for (const course of this.courses) {
+                    if (course.id) {
+                        await axios.put(`/api/course/${course.id}`, {
+                            id: course.id,
+                            course: course.course,
+                        });
+                    } else {
+                        await axios.post('/api/course', {
+                            department: this.department,
+                            courses: [course],
+                        });
+                    }
+                }
 
-        toast.add({
-            severity:'success',
-            summary:'Saved',
-            detail:'Courses saved successfully',
-            life:3000
-        })
+                this.$toast.add({
+                    severity: 'success',
+                    summary: 'Saved',
+                    detail: 'Courses saved successfully',
+                    life: 3000,
+                });
 
-        editingIndex.value = null
-        isAddingDepartment.value = false
+                this.editingIndex = null;
+                this.isAddingDepartment = false;
+                this.fetchCourses();
+                this.fetchDepartments();
+            } catch (error: any) {
+                if (error.response && error.response.status === 422) {
+                    const errors = error.response.data.errors;
 
-        fetchCourses()
-        fetchDepartments()
+                    Object.keys(errors).forEach((key) => {
+                        let message = errors[key][0];
+                        let summary = 'Validation Error';
 
-    }catch(error){
-        toast.add({
-            severity:'error',
-            summary:'Error',
-            detail:'Saving failed',
-            life:3000
-        })
-        console.error(error)
-    }
-}
+                        if (key.includes('.')) {
+                            const parts = key.split('.');
+                            const rowIndex = parseInt(parts[1]) + 1;
+
+                            summary = `Row ${rowIndex} Error`;
+                            message = message.replace(key, 'Course ID');
+                        }
+
+                        this.$toast.add({
+                            severity: 'error',
+                            summary: summary,
+                            detail: message,
+                            life: 5000,
+                        });
+                    });
+                } else {
+                    this.$toast.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'An unexpected error occurred while saving.',
+                        life: 3000,
+                    });
+                }
+            }
+        },
+    },
+});
 </script>
 
 <template>
     <AppLayout>
+        <PvToast position="top-right" />
 
         <div class="p-6">
+            <h1 class="mb-6 text-2xl font-bold">Course Management</h1>
 
-            <h1 class="text-2xl font-bold mb-6">
-                Course Management
-            </h1>
-
-            <div class="bg-white shadow rounded-lg p-5 mb-6">
-
-                <h2 class="text-lg font-semibold mb-3">
+            <div class="mb-8 max-w-2xl">
+                <h2 class="mb-3 text-lg font-semibold text-gray-700">
                     Department
                 </h2>
-
-                <div class="flex gap-3">
-
-                    <select
+                <div class="flex items-center gap-3">
+                    <PvSelect
                         v-if="!isAddingDepartment"
                         v-model="department"
-                        class="border p-2 rounded w-96"
-                    >
-                        <option value="">Select Department</option>
-                        <option
-                            v-for="dept in departments"
-                            :key="dept"
-                            :value="dept"
-                        >
-                            {{ dept }}
-                        </option>
-                    </select>
+                        :options="departments"
+                        placeholder="Select Department"
+                        class="w-full md:w-96"
+                    />
 
-                    <input
+                    <InputText
                         v-if="isAddingDepartment"
                         v-model="department"
-                        type="text"
                         placeholder="Enter New Department"
-                        class="border p-2 rounded w-96"
+                        class="w-full md:w-96"
                     />
-
-                    <button
-                        @click="enableAddDepartment"
-                        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                    >
-                        +
-                    </button>
-
-                </div>
-            </div>
-
-            <div class="bg-white shadow rounded-lg p-5">
-
-                <h2 class="text-lg font-semibold mb-4">
-                    Courses
-                </h2>
-
-                <table class="w-full border border-gray-300">
-
-                    <thead class="bg-gray-100">
-                    <tr>
-                        <th class="border p-2 w-20">#</th>
-                        <th class="border p-2 w-40">Course ID</th>
-                        <th class="border p-2">Course Name</th>
-                        <th class="border p-2 w-40">Action</th>
-                    </tr>
-                    </thead>
-
-                    <tbody>
-                    <tr v-for="(course,index) in courses" :key="index">
-
-                        <td class="border p-2 text-center">
-                            {{ index + 1 }}
-                        </td>
-
-                        <td class="border p-2">
-                            <input
-                                v-model="course.course_id"
-                                type="text"
-                                placeholder="Course ID"
-                                class="border p-2 rounded w-full"
-                                :readonly="!isAddingDepartment && editingIndex !== index && course.id !== null"
-                            />
-                        </td>
-
-                        <td class="border p-2">
-                            <input
-                                v-model="course.course"
-                                type="text"
-                                placeholder="Course Name"
-                                class="border p-2 rounded w-full"
-                                :readonly="!isAddingDepartment && editingIndex !== index && course.id !== null"
-                            />
-                        </td>
-
-                        <td class="border p-2 text-center space-x-2">
-
-                            <button
-                                v-if="!isAddingDepartment"
-                                @click="editCourseRow(index)"
-                                class="bg-yellow-500 text-white px-3 py-1 rounded"
-                            >
-                                Edit
-                            </button>
-
-                            <button
-                                v-if="isAddingDepartment || editingIndex === index"
-                                @click="removeCourseRow(index)"
-                                class="bg-red-600 text-white px-3 py-1 rounded"
-                            >
-                                Remove
-                            </button>
-
-                        </td>
-
-                    </tr>
-                    </tbody>
-
-                </table>
-
-                <div class="flex justify-between mt-4">
-
-                    <button
-                        @click="addCourseRow"
-                        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                    >
-                        +
-                    </button>
 
                     <PvButton
-                        label="Save All"
-                        @click="saveCourses"
-                        class="!bg-blue-600 !text-white !px-4 !py-2 !rounded !hover:bg-blue-700 "
+                        label="Add"
+                        icon="pi pi-plus"
+                        severity="secondary"
+                        variant="outlined"
+                        @click="enableAddDepartment"
                     />
-
                 </div>
-
             </div>
 
-        </div>
+            <div
+                class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+            >
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-700">Courses</h2>
 
+                    <span class="relative">
+                        <InputText
+                            v-model="search"
+                            placeholder="Search courses..."
+                            class="w-64 pl-10"
+                            size="small"
+                        />
+                    </span>
+                </div>
+
+                <DataTable
+                    :value="
+                        courses.filter(
+                            (c) =>
+                                c.course
+                                    .toLowerCase()
+                                    .includes(search.toLowerCase()) ||
+                                c.course_id
+                                    .toLowerCase()
+                                    .includes(search.toLowerCase()),
+                        )
+                    "
+                    :paginator="true"
+                    :rows="rows"
+                    :first="first"
+                    :totalRecords="totalRecords"
+                    @page="
+                        (e) => {
+                            first = e.first;
+                            rows = e.rows;
+                        }
+                    "
+                    class="p-datatable-sm"
+                    responsiveLayout="scroll"
+                >
+                    <Column
+                        header="#"
+                        class="w-16 text-center"
+                        headerClass="justify-center"
+                    >
+                        <template #body="slotProps">
+                            {{ first + slotProps.index + 1 }}
+                        </template>
+                    </Column>
+
+                    <Column
+                        header="Course ID"
+                        class="text-center"
+                        headerClass="justify-center"
+                    >
+                        <template #body="{ data, index }">
+                            <InputText
+                                v-model="data.course_id"
+                                class="w-full"
+                                :readonly="
+                                    !isAddingDepartment &&
+                                    editingIndex !== index &&
+                                    data.id !== null
+                                "
+                            />
+                        </template>
+                    </Column>
+
+                    <Column
+                        header="Course Name"
+                        class="text-center"
+                        headerClass="justify-center"
+                    >
+                        <template #body="{ data, index }">
+                            <InputText
+                                v-model="data.course"
+                                class="w-full"
+                                :readonly="
+                                    !isAddingDepartment &&
+                                    editingIndex !== index &&
+                                    data.id !== null
+                                "
+                            />
+                        </template>
+                    </Column>
+
+                    <Column
+                        header="Action"
+                        class="w-32 text-center"
+                        headerClass="justify-center"
+                    >
+                        <template #body="{ index }">
+                            <div class="flex justify-center gap-1">
+                                <PvButton
+                                    v-if="!isAddingDepartment"
+                                    icon="pi pi-pencil"
+                                    variant="text"
+                                    rounded
+                                    class="!p-1 !text-emerald-500 hover:!bg-emerald-50"
+                                    @click="editCourseRow(index)"
+                                />
+                                <PvButton
+                                    v-if="
+                                        isAddingDepartment ||
+                                        editingIndex === index
+                                    "
+                                    icon="pi pi-trash"
+                                    variant="text"
+                                    rounded
+                                    class="!p-1 !text-red-500 hover:!bg-red-50"
+                                    @click="removeCourseRow(index)"
+                                />
+                            </div>
+                        </template>
+                    </Column>
+                </DataTable>
+
+                <div class="mt-4">
+                    <PvButton
+                        label="Add Course"
+                        icon="pi pi-plus"
+                        severity="secondary"
+                        variant="text"
+                        size="small"
+                        class="!text-gray-600 hover:!bg-gray-100"
+                        @click="addCourseRow"
+                    />
+                </div>
+
+                <div class="mt-6 flex justify-end border-t pt-4">
+                    <PvButton
+                        label="Save"
+                        icon="pi pi-check"
+                        class="border-none bg-emerald-500 px-6 text-white"
+                        @click="saveCourses"
+                    />
+                </div>
+            </div>
+        </div>
     </AppLayout>
 </template>
