@@ -228,6 +228,9 @@ export default defineComponent({
                                 id="department"
                                 v-model="selectedDepartment"
                                 :options="departments"
+                                optionLabel="department"
+                                optionValue="department"
+                                placeholder="Select Department"
                                 fluid
                             />
                             <label for="department">Select Department</label>

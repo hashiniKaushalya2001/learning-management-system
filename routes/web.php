@@ -31,6 +31,11 @@ Route::get('/students', function () {
     return Inertia::render('Students/index');
 });
 
+Route::get('/assignments', function () {
+    return Inertia::render('Assignment/index');
+});
+
 Route::get('/download-pdf/{path}', function ($path) {
     return Storage::disk('local')->response($path);
 })->where('path', '.*');
+

@@ -42,6 +42,11 @@ const mainNavItems: NavItem[] = [
         href: '/students',
         icon: Building
     },
+    {
+        title: 'Assignments',
+        href: '/assignments',
+        icon: Building
+    },
 ];
 
 </script>
